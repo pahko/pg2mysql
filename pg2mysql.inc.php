@@ -21,7 +21,7 @@ the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 */
 
-ini_set("memory_limit", "512M");
+ini_set("memory_limit", "32G");
 error_reporting(E_ALL & ~E_DEPRECATED);
 define('PRODUCT', "pg2mysql");
 define('VERSION', "1.9");
@@ -120,9 +120,17 @@ function pg2mysql_large($infilename, $outfilename)
                         print_r($pgsqlchunk);
                         echo "=======================\n";
             */
-
             $mysqlchunk=pg2mysql($pgsqlchunk, $first);
-            fputs($outfp, $mysqlchunk);
+            $batchSize = 5000;
+            $lines = explode("\n", $mysqlchunk);
+            $linesCount = count($lines);
+            $batches = ceil($linesCount / $batchSize);
+            for ($i = 0; $i < $batches; $i++) {
+                $startIndex = $i * $batchSize;
+                $batch = array_slice($lines, $startIndex, $batchSize);
+                $batchContent = implode("\n", $batch) . "\n";
+                fputs($outfp, $batchContent);
+            }
 
             $first=false;
             $pgsqlchunk=array();
@@ -398,7 +406,7 @@ function pg2mysql($input, $header=true)
             } else {
                 $vals = explode('	', $line);
                 foreach ($vals as $i => $val) {
-                    $val = trim($val);
+                    $val = rtrim($val, "\n");
                     switch ($val) {
                         case '\\N':
                             $vals[$i] = 'NULL';
@@ -410,7 +418,7 @@ function pg2mysql($input, $header=true)
                             $vals[$i] = 'false';
                             break;
                         default:
-                            $vals[$i] = "'" . str_replace("'", "\\'", trim($val)) . "'";
+                            $vals[$i] = "'" . str_replace("'", "\\'", $val) . "'";
                     }
                 }
                 $values[] = '(' . implode(',', $vals) . ')';
