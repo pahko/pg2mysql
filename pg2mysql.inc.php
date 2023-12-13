@@ -21,7 +21,7 @@ the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 */
 
-ini_set("memory_limit", "32G");
+ini_set("memory_limit", "64G");
 error_reporting(E_ALL & ~E_DEPRECATED);
 define('PRODUCT', "pg2mysql");
 define('VERSION', "1.9");
@@ -121,7 +121,7 @@ function pg2mysql_large($infilename, $outfilename)
                         echo "=======================\n";
             */
             $mysqlchunk=pg2mysql($pgsqlchunk, $first);
-            $batchSize = 5000;
+            $batchSize = 4000;
             $lines = explode("\n", $mysqlchunk);
             $linesCount = count($lines);
             $batches = ceil($linesCount / $batchSize);
